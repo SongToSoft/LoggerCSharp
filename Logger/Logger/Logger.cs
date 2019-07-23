@@ -14,14 +14,20 @@ namespace LoggerSpace
         FATAL
     }
 
+    public enum ELoggerMode
+    {
+        CONSOLE,
+        FILE,
+        FILE_WITH_CONSOLE
+    }
+
     public class Logger
     {
         private StreamWriter m_streamWriter;
-        private bool m_withConsoleOutput = false;
- 
-        public Logger(bool withConsoleOutput = true)
+        private ELoggerMode m_loggerMode;
+        public Logger(ELoggerMode loggerMode)
         {
-            m_withConsoleOutput = withConsoleOutput;
+            m_loggerMode = loggerMode;
             string fileName = (Assembly.GetCallingAssembly().GetName().Name + "_" + DateTime.Now + ".txt").Replace(' ', '_').Replace(':', '.');
             if (File.Exists(fileName))
             {
@@ -46,24 +52,14 @@ namespace LoggerSpace
             {
                 loggerMessage += "[EXCEPTION] " + exception.Message;
             }
-            m_streamWriter.WriteLine(loggerMessage);
-            m_streamWriter.Flush();
-            if (m_withConsoleOutput)
-            {
-                System.Console.WriteLine(loggerMessage);
-            }
+            Execute(loggerMessage);
         }
 
         public void Log<T>(string message, ELoggerLevel level, T value) where T : IComparable<T>
         {
             string loggerMessage = "[" + DateTime.Now + "]" + " [" + level + "] " + message + " [VALUE] : " + value;
 
-            m_streamWriter.WriteLine(loggerMessage);
-            m_streamWriter.Flush();
-            if (m_withConsoleOutput)
-            {
-                System.Console.WriteLine(loggerMessage);
-            }
+            Execute(loggerMessage);
         }
 
         public void Log<T>(string message, ELoggerLevel level, T[] array) where T : IComparable<T>
@@ -74,12 +70,7 @@ namespace LoggerSpace
                 loggerMessage += array[i] + (i != (array.Length - 1) ? ", " : " )" );
             }
 
-            m_streamWriter.WriteLine(loggerMessage);
-            m_streamWriter.Flush();
-            if (m_withConsoleOutput)
-            {
-                System.Console.WriteLine(loggerMessage);
-            }
+            Execute(loggerMessage);
         }
 
         public void Log<T>(string message, ELoggerLevel level, List<T> list) where T : IComparable<T>
@@ -90,9 +81,17 @@ namespace LoggerSpace
                 loggerMessage += list[i] + (i != (list.Count - 1) ? ", " : " )");
             }
 
-            m_streamWriter.WriteLine(loggerMessage);
-            m_streamWriter.Flush();
-            if (m_withConsoleOutput)
+            Execute(loggerMessage);
+        }
+
+        public void Execute(string loggerMessage)
+        {
+            if ((m_loggerMode == ELoggerMode.FILE) || (m_loggerMode == ELoggerMode.FILE_WITH_CONSOLE))
+            {
+                m_streamWriter.WriteLine(loggerMessage);
+                m_streamWriter.Flush();
+            }
+            if ((m_loggerMode == ELoggerMode.CONSOLE) || (m_loggerMode == ELoggerMode.FILE_WITH_CONSOLE))
             {
                 System.Console.WriteLine(loggerMessage);
             }
